@@ -1,8 +1,12 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import json
 import os
 
 app = Flask(__name__)
+
+# ✅ Enable CORS only for your Netlify site
+CORS(app, origins=["https://shadowslavereader.netlify.app"])
 
 @app.route('/')
 def root():
@@ -16,4 +20,4 @@ def chapters():
         return jsonify(json.load(f))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)  # Render uses dynamic ports via env if needed
+    app.run(host='0.0.0.0', port=10000)
