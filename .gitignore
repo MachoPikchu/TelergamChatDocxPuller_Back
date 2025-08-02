@@ -3,17 +3,10 @@
 venv/
 
 # Ignore environment config
-backend/.env
+.env
 
 # Ignore all session files
 *.session
 
-# Ignore compiled Python files and cache
-__pycache__/
-*.py[cod]
-
 # Ignore macOS metadata
 .DS_Store
-
-# Optional: Ignore text output if you don’t want to version them
-compiled_chapters.txt

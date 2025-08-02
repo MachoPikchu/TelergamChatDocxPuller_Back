@@ -1,5 +1,6 @@
 import os
 import json
+import subprocess
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
 from docx import Document
@@ -41,6 +42,16 @@ def extract_title(text, fallback="Untitled"):
             return line.strip()
     return fallback
 
+def git_push_changes(commit_message):
+    """Commit and push changes to GitHub"""
+    try:
+        subprocess.run(['git', 'add', json_file], check=True)
+        subprocess.run(['git', 'commit', '-m', commit_message], check=True)
+        subprocess.run(['git', 'push'], check=True)
+        print("🚀 Changes pushed to GitHub.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Git push failed: {e}")
+
 @client.on(events.NewMessage(chats=target_channel))
 async def handler(event):
     """Triggered on new message with DOCX"""
@@ -71,6 +82,9 @@ async def handler(event):
                 json.dump(chapters, f, ensure_ascii=False, indent=2)
 
             print(f"✅ Saved '{title}' to chapters.json")
+
+            # Git commit and push
+            git_push_changes(f"Add chapter: {title}")
 
         except Exception as e:
             print(f"[ERROR] Problem processing {file_name}: {e}")
