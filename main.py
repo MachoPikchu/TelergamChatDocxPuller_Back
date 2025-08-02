@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from telethon import TelegramClient, events
 from docx import Document
 
+# Load environment variables
 load_dotenv()
 
 # Config
@@ -12,14 +13,20 @@ api_id = int(os.getenv("TELEGRAM_API_ID"))
 api_hash = os.getenv("TELEGRAM_API_HASH")
 phone_number = os.getenv("TELEGRAM_PHONE_NUMBER")
 target_channel = os.getenv("TARGET_CHANNEL")
+git_user = os.getenv("GIT_USER_NAME", "AutoBot")
+git_email = os.getenv("GIT_USER_EMAIL", "autobot@example.com")
+gh_repo = os.getenv("GH_REPO")  # example: https://<token>@github.com/username/repo.git
 
 buffer_dir = '../buffer'
 json_file = 'chapters.json'
 
+# Create buffer directory
 os.makedirs(buffer_dir, exist_ok=True)
 
+# Initialize Telegram client
 client = TelegramClient("session_realtime", api_id, api_hash)
 
+# Load existing chapters
 if os.path.exists(json_file):
     with open(json_file, 'r', encoding='utf-8') as f:
         chapters = json.load(f)
@@ -45,9 +52,12 @@ def extract_title(text, fallback="Untitled"):
 def git_push_changes(commit_message):
     """Commit and push changes to GitHub"""
     try:
+        subprocess.run(['git', 'config', '--global', 'user.name', git_user], check=True)
+        subprocess.run(['git', 'config', '--global', 'user.email', git_email], check=True)
+        subprocess.run(['git', 'remote', 'set-url', 'origin', gh_repo], check=True)
         subprocess.run(['git', 'add', json_file], check=True)
         subprocess.run(['git', 'commit', '-m', commit_message], check=True)
-        subprocess.run(['git', 'push'], check=True)
+        subprocess.run(['git', 'push', 'origin', 'main'], check=True)
         print("🚀 Changes pushed to GitHub.")
     except subprocess.CalledProcessError as e:
         print(f"❌ Git push failed: {e}")
@@ -83,7 +93,7 @@ async def handler(event):
 
             print(f"✅ Saved '{title}' to chapters.json")
 
-            # Git commit and push
+            # Push to Git
             git_push_changes(f"Add chapter: {title}")
 
         except Exception as e:
@@ -94,6 +104,7 @@ async def handler(event):
                 os.remove(file_path)
                 print(f"🗑️ Removed {file_name} from buffer")
 
+# Start the bot
 print("🔄 Listening for new DOCX chapters...")
 client.start(phone_number)
 client.run_until_disconnected()
